@@ -25,14 +25,19 @@ import { OrchestratorModule } from './orchestrator/orchestrator.module';
     // BullMQ com Redis - conexão global compartilhada por todas as filas
     BullModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-          password: configService.get<string>('REDIS_PASSWORD') || undefined,
-          maxRetriesPerRequest: null, // necessário para BullMQ
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const { hostname, port, password } = new URL(
+          configService.get<string>('REDIS_URL', 'redis://localhost:6379'),
+        );
+        return {
+          connection: {
+            host: hostname,
+            port: parseInt(port || '6379', 10),
+            password: password || undefined,
+            maxRetriesPerRequest: null, // necessário para BullMQ
+          },
+        };
+      },
       inject: [ConfigService],
     }),
 

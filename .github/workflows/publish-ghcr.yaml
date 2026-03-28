@@ -1,0 +1,105 @@
+name: Docker Image CI/CD
+
+on:
+  push:
+    branches: [ "prod", "staging" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.set_tag.outputs.tag }}
+      environment: ${{ steps.set_tag.outputs.env }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set image tag and environment
+      id: set_tag
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
+          echo "tag=latest" >> $GITHUB_OUTPUT
+          echo "env=prod" >> $GITHUB_OUTPUT
+        else
+          echo "tag=staging" >> $GITHUB_OUTPUT
+          echo "env=staging" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Login to GHCR
+      run: docker login ghcr.io -u lucianouziti -p ${{ secrets.GHCR_TOKEN }}
+    
+    - name: Build and push
+      run: |
+        docker buildx build \
+          --platform linux/amd64 \
+          -t ghcr.io/lucianouziti/nfe-orchestrator:${{ steps.set_tag.outputs.tag }} \
+          --push .
+
+  deploy-prod:
+    needs: build
+    if: needs.build.outputs.environment == 'prod'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN_PROD }}
+    
+    - name: Save kubeconfig
+      run: doctl kubernetes cluster kubeconfig save k8s-1-33-1-do-5-nyc2-1762957814586
+    
+    - name: Create namespace if not exists
+      run: kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Create image pull secret
+      run: |
+        kubectl create secret docker-registry ghcr-secret \
+          --docker-server=ghcr.io \
+          --docker-username=lucianouziti \
+          --docker-password=${{ secrets.GHCR_TOKEN }} \
+          --namespace=production \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Deploy to Production
+      run: |
+        kubectl apply -k k8s/overlays/prod
+        kubectl rollout restart deployment/nfe-orchestrator --namespace=production
+        
+
+  deploy-staging:
+    needs: build
+    if: needs.build.outputs.environment == 'staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN_STAGING }}
+    
+    - name: Save kubeconfig
+      run: doctl kubernetes cluster kubeconfig save k8s-1-33-1-do-5-nyc2-1762957814586
+    
+    - name: Create namespace if not exists
+      run: kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Create image pull secret
+      run: |
+        kubectl create secret docker-registry ghcr-secret \
+          --docker-server=ghcr.io \
+          --docker-username=lucianouziti \
+          --docker-password=${{ secrets.GHCR_TOKEN }} \
+          --namespace=staging \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Deploy to Staging
+      run: |
+        kubectl apply -k k8s/overlays/staging
+        kubectl rollout restart deployment/nfe-orchestrator --namespace=staging

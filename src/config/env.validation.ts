@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
@@ -17,10 +17,6 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty({ message: 'MONGODB_URI_MASTER é obrigatória' })
   MONGODB_URI_MASTER: string;
-
-  @IsString()
-  @IsNotEmpty({ message: 'MONGODB_URI é obrigatória' })
-  MONGODB_URI: string;
 
   @Type(() => Number)
   @IsNumber()
@@ -55,21 +51,12 @@ export class EnvironmentVariables {
   // Redis
   @IsString()
   @IsOptional()
-  REDIS_HOST: string = 'localhost';
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  REDIS_PORT: number = 6379;
-
-  @IsString()
-  @IsOptional()
-  REDIS_PASSWORD: string = '';
+  REDIS_URL: string = 'redis://localhost:6379';
 
   // Orchestrator
   @IsString()
   @IsOptional()
-  SYNC_CRON: string = '*/15 * * * *';
+  SYNC_CRON: string = '*/45 6-20 * * *';
 
   @Type(() => Number)
   @IsNumber()
