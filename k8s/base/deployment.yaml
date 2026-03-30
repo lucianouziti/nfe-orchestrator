@@ -23,24 +23,6 @@ spec:
         envFrom:
         - configMapRef:
             name: nfe-orchestrator-config
-        ports:
-        - containerPort: 3010
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3010
-          initialDelaySeconds: 15
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3010
-          initialDelaySeconds: 25
-          periodSeconds: 10
-          timeoutSeconds: 3
-          failureThreshold: 3
         resources:
           requests:
             cpu: "100m"
