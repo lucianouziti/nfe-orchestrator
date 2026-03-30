@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrchestratorService } from './orchestrator.service';
 import { OrchestratorScheduler } from './orchestrator.scheduler';
+import { OrchestratorController } from './orchestrator.controller';
 import { TenantRepository } from '../database/repositories/tenant.repository';
 import { Tenant, TenantSchema } from '../database/schemas/tenant.schema';
 
@@ -24,6 +25,7 @@ import { Tenant, TenantSchema } from '../database/schemas/tenant.schema';
       inject: [ConfigService],
     }),
   ],
+  controllers: [OrchestratorController],
   providers: [OrchestratorService, OrchestratorScheduler, TenantRepository],
   exports: [OrchestratorService],
 })
