@@ -69,6 +69,7 @@ export class OrchestratorService {
 
     while (true) {
       const tenants = await this.tenantRepository.findActivePage(page, this.shardSize);
+      console.log("🚀 ~ OrchestratorService ~ runSyncCycle ~ tenants:", tenants)
       if (tenants.length === 0) break;
 
       const shardDelay = page * delayPerShard;
@@ -93,14 +94,15 @@ export class OrchestratorService {
     cycleId: string,
   ): Promise<number> {
     // Filtra tenants sem certificado cadastrado — não é possível consultar a SEFAZ sem ele
-    const tenantsSemCert = tenants.filter((t) => !t.certificateId);
-    if (tenantsSemCert.length > 0) {
-      this.logger.warn(
-        `[Ciclo ${cycleId}] ${tenantsSemCert.length} tenant(s) sem certificateId serão ignorados: ` +
-        tenantsSemCert.map((t) => t.cnpj).join(', '),
-      );
-    }
-    const tenantsValidos = tenants.filter((t) => !!t.certificateId);
+    // const tenantsSemCert = tenants.filter((t) => !t.certificateId);
+    // if (tenantsSemCert.length > 0) {
+    //   this.logger.warn(
+    //     `[Ciclo ${cycleId}] ${tenantsSemCert.length} tenant(s) sem certificateId serão ignorados: ` +
+    //     tenantsSemCert.map((t) => t.cnpj).join(', '),
+    //   );
+    // }
+    //const tenantsValidos = tenants.filter((t) => !!t.certificateId);
+    const tenantsValidos = tenants;
 
     const jobs = tenantsValidos.map((tenant) => ({
       name: 'nfe-sync',
@@ -116,7 +118,7 @@ export class OrchestratorService {
       } as NfeSyncJobPayload,
       opts: {
         // ID determinístico: evita enfileirar o mesmo CNPJ duas vezes no mesmo ciclo
-        jobId: `nfe-sync:${tenant.cnpj}`,
+        jobId: `nfe-sync_${tenant.cnpj}`,
         delay: delayMs,
         attempts: this.configService.get<number>('JOB_MAX_RETRIES', 3),
         backoff: {

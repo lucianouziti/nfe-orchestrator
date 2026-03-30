@@ -27,13 +27,13 @@ export class TenantRepository {
    * Usa cursor para eficiência com 10k+ registros.
    */
   async findActivePage(page: number, pageSize: number): Promise<ActiveTenant[]> {
-    const skip = page * pageSize;
+    const skip = page;
+    //console.log("🚀 ~ TenantRepository ~ findActivePage ~ skip:", skip, pageSize)
 
     const tenants = await this.tenantModel
       .find(
         {
           status: TenantStatus.ACTIVE,
-          deleted: { $ne: true },
         },
         {
           cnpj: 1,
@@ -43,6 +43,7 @@ export class TenantRepository {
           certificateId: 1,
           lastNsu: 1,
           lastNfeSync: 1,
+          id: 1,
           _id: 0,
         },
       )
@@ -51,6 +52,7 @@ export class TenantRepository {
       .sort({ cnpj: 1 }) // ordenação estável para sharding consistente
       .lean()
       .exec();
+
 
     return tenants as ActiveTenant[];
   }
@@ -61,7 +63,6 @@ export class TenantRepository {
   async countActive(): Promise<number> {
     return this.tenantModel.countDocuments({
       status: TenantStatus.ACTIVE,
-      deleted: { $ne: true },
     });
   }
 
