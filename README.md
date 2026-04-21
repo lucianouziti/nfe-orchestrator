@@ -84,7 +84,7 @@ npm run start:dev
 ```env
 MONGODB_URI_MASTER=mongodb://localhost:27017/master
 REDIS_URL=redis://localhost:6379
-CERT_SERVICE_URL=http://localhost:3040
+CERTIFICATE_URL=http://localhost:3040
 
 # 1 = Produção, 2 = Homologação (padrão: 2)
 SEFAZ_AMBIENTE=2
@@ -251,7 +251,7 @@ POST XML para ERP API
 ### Fetch Service não processa os jobs
 
 - Confirme que `NFE_SYNC_QUEUE` no Fetch Service bate com `NFE_SYNC_QUEUE` no Orchestrator (padrão: `nfe-sync`).
-- Verifique se o serviço de certificados está acessível via `CERT_SERVICE_URL`.
+- Verifique se o serviço de certificados está acessível via `CERTIFICATE_URL`.
 - Em homologação (`SEFAZ_AMBIENTE=2`), confirme que o certificado é válido para o ambiente de homologação da SEFAZ.
 
 ### Import Service retorna erros 4xx (DLQ)
@@ -291,7 +291,7 @@ POST XML para ERP API
 |----------|--------|-----------|
 | `MONGODB_URI_MASTER` | — | URI do MongoDB master (obrigatório) |
 | `REDIS_URL` | `redis://localhost:6379` | URL do Redis |
-| `CERT_SERVICE_URL` | — | URL do serviço de certificados (obrigatório) |
+| `CERTIFICATE_URL` | — | URL do serviço de certificados (obrigatório) |
 | `SEFAZ_AMBIENTE` | `2` | 1=Produção, 2=Homologação |
 | `NFE_SYNC_QUEUE` | `nfe-sync` | Fila de entrada |
 | `NFE_IMPORT_QUEUE` | `nfe-import` | Fila de saída |
